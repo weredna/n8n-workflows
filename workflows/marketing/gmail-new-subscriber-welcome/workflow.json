@@ -1,18 +1,21 @@
 {
   "name": "Gmail: New Subscriber Welcome",
+  "active": false,
   "nodes": [
     {
       "parameters": {
         "triggerOn": "newRow",
         "sheetId": "YOUR_SHEET_ID",
-        "range": "Subscribers!A:B"
+        "range": "Subscribers!A:B",
+        "keyRow": 1
       },
+      "id": "GoogleSheetsTrigger",
       "name": "Google Sheets Trigger",
       "type": "n8n-nodes-base.googleSheetsTrigger",
       "typeVersion": 1,
-      "position": [250, 300],
+      "position": [280, 300],
       "credentials": {
-        "googleApi": "YOUR_GOOGLE_CREDENTIAL"
+        "googleApi": "YOUR_GOOGLE_OAUTH2_CREDENTIAL"
       }
     },
     {
@@ -22,19 +25,27 @@
         "subject": "Welcome to the list!",
         "message": "Hi {{$json[\"FirstName\"]}},\n\nThanks for subscribing! We’re excited to have you on board.\n\n— Your Company Team"
       },
+      "id": "SendGmail",
       "name": "Send Gmail",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 1,
-      "position": [500, 300],
+      "position": [540, 300],
       "credentials": {
-        "gmailOAuth2": "YOUR_GMAIL_CREDENTIAL"
+        "gmailOAuth2": "YOUR_GMAIL_OAUTH2_CREDENTIAL"
       }
     }
   ],
   "connections": {
     "Google Sheets Trigger": {
-      "main": [[{ "node": "Send Gmail", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Send Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
-  },
-  "active": false
+  ]
 }
