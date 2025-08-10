@@ -1,0 +1,75 @@
+{
+  "name": "Forms to Notion",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "triggerOn": "newRow",
+        "sheetId": "YOUR_SHEET_ID",
+        "range": "Form Responses 1!A:C",
+        "keyRow": 1
+      },
+      "id": "FormsTrigger",
+      "name": "Google Sheets Trigger",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [260, 300],
+      "credentials": {
+        "googleApi": "YOUR_GOOGLE_OAUTH2_CREDENTIAL"
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": "YOUR_NOTION_DATABASE_ID",
+        "propertiesUi": {
+          "property": [
+            {
+              "key": "Name",
+              "type": "title",
+              "title": {
+                "value": "={{$json[\"Name\"] || $json[\"Full Name\"] || 'Form Response'}}"
+              }
+            },
+            {
+              "key": "Email",
+              "type": "email",
+              "email": "={{$json[\"Email\"]}}"
+            },
+            {
+              "key": "Feedback",
+              "type": "richText",
+              "richText": [
+                {
+                  "text": "={{$json[\"Feedback\"] || $json[\"Comments\"] || ''}}"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "id": "CreateNotionPage",
+      "name": "Notion (Create Page)",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [520, 300],
+      "credentials": {
+        "notionApi": "YOUR_NOTION_INTEGRATION_CREDENTIAL"
+      }
+    }
+  ],
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Notion (Create Page)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
