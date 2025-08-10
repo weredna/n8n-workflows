@@ -1,0 +1,98 @@
+{
+  "name": "Slack Daily Digest",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyDay",
+              "hour": 9
+            }
+          ]
+        }
+      },
+      "id": "ScheduleTrigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 280]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "sheetId": "YOUR_SHEET_ID",
+        "range": "Tasks!A:D",
+        "keyRow": 1
+      },
+      "id": "ReadSheet",
+      "name": "Google Sheets (Read)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [500, 280],
+      "credentials": {
+        "googleApi": "YOUR_GOOGLE_OAUTH2_CREDENTIAL"
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const now = new Date();\nconst cutoff = new Date(now.getTime() - 24*60*60*1000);\n\n// Expecting fields: Task, Owner, DueDate, CreatedDate\nconst rows = items.map(i => i.json).filter(r => {\n  const d = new Date(r.CreatedDate);\n  return !isNaN(d) && d > cutoff;\n});\n\nif (rows.length === 0) {\n  return [{ json: { text: 'No new items in the last 24 hours.' } }];\n}\n\nconst lines = rows.map(r => `• ${r.Task} (Owner: ${r.Owner}, Due: ${r.DueDate})`);\nreturn [{ json: { text: `Here’s today’s update (last 24h):\\n${lines.join('\\n')}` } }];"
+      },
+      "id": "FormatDigest",
+      "name": "Code (Format Digest)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 280]
+    },
+    {
+      "parameters": {
+        "channel": "#daily-digest",
+        "text": "={{$json[\"text\"]}}"
+      },
+      "id": "PostSlack",
+      "name": "Slack (Post Message)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1020, 280],
+      "credentials": {
+        "slackApi": "YOUR_SLACK_BOT_CREDENTIAL"
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets (Read)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets (Read)": {
+      "main": [
+        [
+          {
+            "node": "Code (Format Digest)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code (Format Digest)": {
+      "main": [
+        [
+          {
+            "node": "Slack (Post Message)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
