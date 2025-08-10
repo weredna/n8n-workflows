@@ -1,0 +1,157 @@
+{
+  "name": "Reseller",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "text": "=\"You're a resale expert. Analyze this item image and a purchase price of ${{ $json.price || 'unknown' }} from the brand {{ $json.brand || 'unspecified' }}. Return:\\n- 📦 Item:\\n- 🏷 Category:\\n- 💸 eBay Price:\\n- 🏪 FBMP Price:\\n- 📉 Estimated Profit:\\n- ✅ Verdict: Buy or ❌ Pass (with reason)\"",
+        "imageUrls": "={{ $('Webhook').item.json.body.attachments[0] }}",
+        "simplify": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        128,
+        -208
+      ],
+      "id": "YOUR_ID",
+      "name": "Analyze image",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_API_KEY",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fixing the error: Cannot read properties of undefined (reading 'attachments')\n\nconst lastItem = $input.all().slice(-1)[0];\nconst data = lastItem.json;\nconst imageUrl = data.attachments?.[0] || null;\nconst message = data.content || '';\nconst priceMatch = message.match(/\\$([\\d.]+)/);\nconst brandMatch = message.match(/brand:\\s*(.+)/i);\n\nconst price = priceMatch ? parseFloat(priceMatch[1]) : null;\nconst brand = brandMatch ? brandMatch[1].trim() : '';\n\nreturn [\n  {\n    json: {\n      imageUrl: imageUrl,\n      price: price,\n      brand: brand,\n      originalMessage: message,\n      username: data.username,\n      timestamp: data.timestamp\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -176
+      ],
+      "id": "YOUR_ID",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "YOUR_WEBHOOK_PATH",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -784,
+        -64
+      ],
+      "id": "YOUR_ID",
+      "name": "Webhook",
+      "webhookId": "YOUR_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "guildId": {
+          "__rl": true,
+          "value": "YOUR_GUILD_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_GUILD_NAME",
+          "cachedResultUrl": "YOUR_DISCORD_CHANNEL_URL"
+        },
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_CHANNEL_NAME",
+          "cachedResultUrl": "YOUR_DISCORD_CHANNEL_URL"
+        },
+        "content": "={{ $('Analyze image').item.json.choices[0].message.content }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        640,
+        -224
+      ],
+      "id": "YOUR_ID",
+      "name": "Send a message",
+      "webhookId": "YOUR_DISCORD_WEBHOOK_ID",
+      "credentials": {
+        "discordBotApi": {
+          "id": "YOUR_DISCORD_BOT_API_KEY",
+          "name": "Discord Bot account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4YOUR_ID",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "id": "YOUR_ID",
+  "tags": []
+}
